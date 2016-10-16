@@ -39,7 +39,7 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	super("Photo viewer");
 	mainWindow = getContentPane();
 
-	databaseManager db = new databaseManager();
+	db = new databaseManager();
 
 	imageLabel = new JLabel("", SwingConstants.CENTER);
 	JScrollPane scrollPane = new JScrollPane(imageLabel);
@@ -365,8 +365,9 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 
     }
 
-    private void preparePhoto(File input) {
+    private void preparePhoto(String in) {
 	try {
+	    File input = new File(in);
 	    BufferedImage bufferedImage = ImageIO.read(input);
 
 	    // get DataBufferBytes from Raster
