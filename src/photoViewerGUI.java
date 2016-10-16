@@ -1,9 +1,11 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.*;
 import java.io.*;
 import java.sql.SQLException;
 import javax.accessibility.Accessible;
+import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
@@ -219,7 +221,7 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
-//		    addPhoto(chooser.getSelectedFile().getAbsolutePath());
+		    preparePhoto(chooser.getSelectedFile().getAbsolutePath());
 		}
 	    }
 	});
@@ -359,6 +361,25 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 		System.err.println("SQL error on next button");
 	    }
 
+	}
+
+    }
+
+    private void preparePhoto(File input) {
+	try {
+	    BufferedImage bufferedImage = ImageIO.read(input);
+
+	    // get DataBufferBytes from Raster
+	    WritableRaster raster = bufferedImage.getRaster();
+	    DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
+
+	    databasePhoto addPhoto = new databasePhoto();
+	    addPhoto.imageArray = data.getData();
+
+	    db.addPhotoToDatabase(addPhoto);
+	}
+	catch (Exception e) {
+	    e.printStackTrace();
 	}
 
     }
