@@ -1,4 +1,5 @@
 
+import java.io.*;
 import java.sql.*;
 
 /*
@@ -39,9 +40,12 @@ public class databaseManager {
 	}
     }
 
-    private void initializeTable() {
+    public void initializeTable() {
 	try {
+
 	    openConnection();
+
+	    stmt.executeUpdate("DROP TABLE IF EXISTS Photos");
 
 	    String createTable = "create table Photos "
 		    + "(id INT NOT NULL AUTO_INCREMENT,"
@@ -68,6 +72,7 @@ public class databaseManager {
 	    ResultSet rs;
 
 	    rs = stmt.executeQuery(sizeString);
+	    rs.next();
 
 	    return (rs.getInt("COUNT(*)"));
 
@@ -87,12 +92,14 @@ public class databaseManager {
 		"INSERT INTO photos (pictnum, date, description, photo) VALUES (?,?,?,?)"
 	);
 
-	addStatement.setInt(1, newPhoto.photoNumber);
+	addStatement.setInt(1, 1);
 	addStatement.setString(2, newPhoto.date);
 	addStatement.setString(3, newPhoto.description);
-	addStatement.setBytes(4, newPhoto.imageArray);
+	ByteArrayInputStream bis = new ByteArrayInputStream(newPhoto.imageArray);
+	addStatement.setBinaryStream(4, bis, (int) newPhoto.imageArray.length);
 
 	addStatement.executeUpdate();
+	addStatement.close();
 
 	cleanup();
 

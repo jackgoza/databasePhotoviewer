@@ -40,6 +40,8 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	mainWindow = getContentPane();
 
 	db = new databaseManager();
+	currIndex = 0;
+	maxIndex = db.getTableSize();
 
 	imageLabel = new JLabel("", SwingConstants.CENTER);
 	JScrollPane scrollPane = new JScrollPane(imageLabel);
@@ -57,6 +59,7 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 
 	mainWindow.add(scrollPane);
 
+	// changeImage();
 	this.setMinimumSize(getSize());
 
 	addWindowListener(new WindowAdapter() {
@@ -413,6 +416,8 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	frame.setVisible(true);
 
 	System.out.println("Program begins...");
+
+	System.out.println("Worked!");
 
     }
 
