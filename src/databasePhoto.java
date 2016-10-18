@@ -15,4 +15,9 @@ public class databasePhoto {
     public String date;
     public int photoNumber;
 
+    public databasePhoto() {
+	description = "No description yet";
+	date = "00/00/0000";
+    }
+
 }

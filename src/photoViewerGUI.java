@@ -1,11 +1,9 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.*;
 import java.io.*;
 import java.sql.SQLException;
 import javax.accessibility.Accessible;
-import javax.imageio.*;
 import javax.swing.*;
 import javax.swing.filechooser.*;
 
@@ -40,6 +38,7 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	mainWindow = getContentPane();
 
 	db = new databaseManager();
+	//db.initializeTable();
 	currIndex = 0;
 	maxIndex = db.getTableSize();
 
@@ -58,6 +57,16 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	mainWindow.add(controlPane, BorderLayout.SOUTH);
 
 	mainWindow.add(scrollPane);
+
+	if (maxIndex > 0) {
+	    try {
+		databasePhoto newPhoto = db.getNewPhoto(1);
+		setPhoto(newPhoto);
+	    }
+	    catch (SQLException squealer) {
+		squealer.printStackTrace();
+	    }
+	}
 
 	// changeImage();
 	this.setMinimumSize(getSize());
@@ -203,16 +212,26 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 
 	saveButton = new JButton("Save");
 
-	/*
 	saveButton.addActionListener(new ActionListener() {
 	    @Override
 	    public void actionPerformed(ActionEvent e) {
-		images.get(imageNumber).setDescription(descriptionTextArea.getText());
-		images.get(imageNumber).setDate(dateTextField.getText());
+		databasePhoto newPhoto = new databasePhoto();
+		newPhoto.description = descriptionTextArea.getText();
+		newPhoto.date = dateTextField.getText();
+		newPhoto.photoNumber = maxIndex + 1;
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		try {
+		    ObjectOutputStream o = new ObjectOutputStream(bos);
+		    o.writeObject(imageLabel.getIcon());
+		    newPhoto.imageArray = bos.toByteArray();
+		}
+		catch (IOException ioe) {
+		    ioe.printStackTrace();
+		}
 
 	    }
 	});
-	 */
+
 	addButton = new JButton("Add Items");
 	addButton.addActionListener(new ActionListener() {
 	    @Override
@@ -224,7 +243,14 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(null);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
-		    preparePhoto(chooser.getSelectedFile().getAbsolutePath());
+		    String in = chooser.getSelectedFile().getAbsolutePath();
+		    try {
+			ImageIcon image = new ImageIcon(in);
+			imageLabel.setIcon(image);
+		    }
+		    catch (IOError ee) {
+			ee.printStackTrace();
+		    }
 		}
 	    }
 	});
@@ -255,7 +281,7 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.LINE_AXIS));
 
 	// Create buttons and text fields
-	currPageText = new JTextField("1");
+	currPageText = new JTextField(Integer.toString(currIndex));
 	totalPageText = new JTextArea();
 
 	totalPageText.setText(String.valueOf(maxIndex));
@@ -368,6 +394,7 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 
     }
 
+    /*
     private void preparePhoto(String in) {
 	try {
 	    File input = new File(in);
@@ -378,22 +405,26 @@ public class photoViewerGUI extends JFrame implements ActionListener, Serializab
 	    DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
 
 	    databasePhoto addPhoto = new databasePhoto();
+	    addPhoto.photoNumber = maxIndex;
 	    addPhoto.imageArray = data.getData();
 
 	    db.addPhotoToDatabase(addPhoto);
+	    maxIndex = db.getTableSize();
+	    setPhoto(addPhoto);
 	}
 	catch (Exception e) {
 	    e.printStackTrace();
 	}
 
     }
-
+     */
     private void setPhoto(databasePhoto newPhoto) {
 
 	ImageIcon image = new ImageIcon(newPhoto.imageArray);
 	imageLabel.setIcon(image);
 	descriptionTextArea.setText(newPhoto.description);
 	dateTextField.setText(newPhoto.date);
+	imageLabel.repaint();
 
     }
 

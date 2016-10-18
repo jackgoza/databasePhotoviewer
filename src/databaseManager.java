@@ -31,7 +31,7 @@ public class databaseManager {
 
 	try {
 	    con = DriverManager.getConnection(url, userID, password);
-	    con.setAutoCommit(false);
+
 	    stmt = con.createStatement();
 	}
 	catch (SQLException s) {
@@ -67,21 +67,19 @@ public class databaseManager {
 	try {
 	    openConnection();
 
-	    String sizeString = "SELECT COUNT(*) FROM Photos";
-
 	    ResultSet rs;
 
-	    rs = stmt.executeQuery(sizeString);
-	    rs.next();
-
-	    return (rs.getInt("COUNT(*)"));
+	    rs = stmt.executeQuery("SELECT COUNT(*) FROM Photos");
+	    if (rs.next()) {
+		return (rs.getInt(1));
+	    }
 
 	}
 	catch (SQLException sizeE) {
 	    System.err.println("Error retrieving size of table");
 	    sizeE.printStackTrace();
-	    return -1;
 	}
+	return 0;
 
     }
 
@@ -92,7 +90,7 @@ public class databaseManager {
 		"INSERT INTO photos (pictnum, date, description, photo) VALUES (?,?,?,?)"
 	);
 
-	addStatement.setInt(1, 1);
+	addStatement.setInt(1, getTableSize() + 1);
 	addStatement.setString(2, newPhoto.date);
 	addStatement.setString(3, newPhoto.description);
 	ByteArrayInputStream bis = new ByteArrayInputStream(newPhoto.imageArray);
@@ -108,24 +106,42 @@ public class databaseManager {
     public databasePhoto getNewPhoto(int index) throws SQLException {
 	openConnection();
 
+	int newByte;
+
 	PreparedStatement getPhotoStatement = con.prepareStatement(
-		"SELECT * FROM photos WHERE pictnum = ?"
+		"SELECT * FROM photos WHERE pictnum = " + index
 	);
 
-	getPhotoStatement.setInt(1, index);
 	ResultSet rs;
 	rs = getPhotoStatement.executeQuery();
-	ResultSetMetaData rsmd = rs.getMetaData();
-	databasePhoto newPhoto = new databasePhoto();
 
-	newPhoto.photoNumber = rs.getInt("pictnum");
-	newPhoto.date = rs.getString("date");
-	newPhoto.description = rs.getString("description");
-	newPhoto.imageArray = rs.getBytes("photo");
+	try {
+	    if (rs.next()) {
+
+		databasePhoto newPhoto = new databasePhoto();
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		InputStream in = rs.getBinaryStream("photo");
+
+		while ((newByte = in.read()) != -1) {
+		    bos.write(newByte);
+		}
+
+		newPhoto.date = rs.getString("date");
+		newPhoto.description = rs.getString("description");
+		newPhoto.photoNumber = rs.getInt("pictnum");
+		newPhoto.imageArray = bos.toByteArray();
+
+		return newPhoto;
+
+	    }
+	}
+	catch (IOException e) {
+	    e.printStackTrace();
+	}
 
 	cleanup();
 
-	return newPhoto;
+	return new databasePhoto();
 
     }
 
